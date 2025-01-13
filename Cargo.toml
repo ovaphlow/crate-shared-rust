@@ -14,4 +14,4 @@ getrandom = "0.2"
 [lib]
 crate-type = ["cdylib"]
 name = "crate_shared"
-path = "src/ksuid.rs"
+path = "src/lib.rs"

@@ -59,11 +59,11 @@ pub extern "C" fn free_ksuid(s: *mut c_char) {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
 
     #[test]
-    fn test_generate_ksuid() {
+    pub fn test_generate_ksuid() {
         let ksuid_ptr = generate_ksuid();
         assert!(!ksuid_ptr.is_null());
 
