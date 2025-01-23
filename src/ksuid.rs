@@ -34,6 +34,24 @@ fn generate_random_bytes(length: usize) -> Vec<u8> {
     random_bytes
 }
 
+#[cfg(target_os = "windows")]
+#[no_mangle]
+pub extern "stdcall" fn generate_ksuid() -> *mut c_char {
+    let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as u32;
+    let mut timestamp_bytes = [0u8; 4];
+    timestamp_bytes.copy_from_slice(&timestamp.to_be_bytes());
+
+    let random_bytes = generate_random_bytes(16);
+
+    let mut ksuid_bytes = Vec::with_capacity(20);
+    ksuid_bytes.extend_from_slice(&timestamp_bytes);
+    ksuid_bytes.extend_from_slice(&random_bytes);
+
+    let ksuid_string = base62_encode(&ksuid_bytes);
+    CString::new(ksuid_string).unwrap().into_raw()
+}
+
+#[cfg(not(target_os = "windows"))]
 #[no_mangle]
 pub extern "C" fn generate_ksuid() -> *mut c_char {
     let timestamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs() as u32;
@@ -50,6 +68,16 @@ pub extern "C" fn generate_ksuid() -> *mut c_char {
     CString::new(ksuid_string).unwrap().into_raw()
 }
 
+#[cfg(target_os = "windows")]
+#[no_mangle]
+pub extern "stdcall" fn free_ksuid(s: *mut c_char) {
+    if s.is_null() { return; }
+    unsafe {
+        drop(CString::from_raw(s));
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
 #[no_mangle]
 pub extern "C" fn free_ksuid(s: *mut c_char) {
     if s.is_null() { return; }
